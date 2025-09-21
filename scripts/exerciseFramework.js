@@ -11,17 +11,416 @@ class ExerciseFramework {
         this.previewElement = null;
         this.exampleElement = null;
         this.feedbackElement = null;
+        this.completedExercises = new Set();
     }
 
     /**
-     * Initialize an exercise with custom configuration
+     * Initialize exercises from configuration
      * @param {Object} config - Exercise configuration
      */
     initExercise(config) {
         this.exerciseConfig = config;
-        this.setupElements();
-        this.setupEventListeners();
-        this.loadExercise();
+        this.initializeAllExercises();
+    }
+
+    /**
+     * Initialize all exercises in the configuration
+     */
+    initializeAllExercises() {
+        if (!this.exerciseConfig || !this.exerciseConfig.exercises) return;
+
+        // Group exercises by tab
+        const tabGroups = {};
+        this.exerciseConfig.exercises.forEach(exercise => {
+            if (!tabGroups[exercise.tab]) {
+                tabGroups[exercise.tab] = [];
+            }
+            tabGroups[exercise.tab].push(exercise);
+        });
+
+        // Create tabs based on tab groups
+        const tabKeys = Object.keys(tabGroups);
+        const tabNames = tabKeys.map(tabKey => this.exerciseConfig.tabs[tabKey].name);
+        const exerciseCounts = Object.values(tabGroups).map(group => group.length);
+        
+        exerciseTabManager.createTabs(tabNames.length, tabNames, exerciseCounts);
+
+        // Create content for each tab
+        tabKeys.forEach((tabKey, tabIndex) => {
+            const exercisesInTab = tabGroups[tabKey];
+            const tabInfo = this.exerciseConfig.tabs[tabKey];
+            
+            // Create HTML for all exercises in this tab
+            const exercisesHTML = exercisesInTab.map((exercise, exerciseIndex) => 
+                this.createExerciseHTML(exercise, tabIndex, exerciseIndex)
+            ).join('');
+            
+            const content = `
+                <div class="excercise-explanation">
+                    <h2>${this.exerciseConfig.title || 'Oefeningen'} - ${tabInfo.name}</h2>
+                    <p>${tabInfo.instructions}</p>
+                </div>
+                <div class="tab-panel active">
+                    ${exercisesHTML}
+                </div>
+            `;
+            
+            exerciseTabManager.setTabContent(tabIndex, content);
+        });
+
+        // Initialize each exercise
+        setTimeout(() => {
+            this.exerciseConfig.exercises.forEach(exercise => {
+                this.initializeSingleExercise(exercise);
+            });
+        }, 100);
+    }
+
+    /**
+     * Create HTML for a single exercise
+     */
+    createExerciseHTML(exercise, tabIndex, exerciseIndex) {
+        const questionNumber = `${tabIndex + 1}.${exerciseIndex + 1}`;
+        return `
+            <div class="question-container">
+                <div><h3>Vraag ${questionNumber}</h3></div>
+                <div class="question-area">
+                    <div class="input-area">
+                        <h3>Jouw Code</h3>
+                        <textarea id="htmlInput${exercise.id}" class="code-input" placeholder="${exercise.placeholder || 'Schrijf hier je code...'}"></textarea>
+                        <button class="reset-button" onclick="exerciseFramework.resetExercise(${exercise.id})">Reset</button>
+                    </div>
+                    <div class="preview-area">
+                        <h3>Preview</h3>
+                        <div class="preview-content" id="htmlPreview${exercise.id}"></div>
+                    </div>
+                    <div class="example-area">
+                        <h3>Voorbeeld</h3>
+                        <div class="example-content" id="htmlExample${exercise.id}"></div>
+                    </div>
+                    <div class="feedback-area">
+                        <h3>Feedback</h3>
+                        <div class="feedback-content" id="feedback${exercise.id}"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Initialize a single exercise
+     */
+    initializeSingleExercise(exercise) {
+        // Set example content based on exercise type
+        const exampleDiv = document.getElementById(`htmlExample${exercise.id}`);
+        if (exampleDiv) {
+            if (exercise.type === 'html') {
+                // Render HTML solution
+                this.renderHTMLContent(exercise.solution, exampleDiv);
+            } else if (exercise.type === 'css') {
+                // For CSS: show HTML with solution CSS applied
+                this.renderCSSExample(exercise.html, exercise.solution, exampleDiv);
+            } else {
+                // Default: just set as text
+                exampleDiv.innerHTML = exercise.solution;
+            }
+        }
+        
+        // Set initial input
+        const textarea = document.getElementById(`htmlInput${exercise.id}`);
+        if (textarea) {
+            textarea.value = exercise.initial || '';
+            
+            // Add event listener for input changes
+            textarea.addEventListener('input', () => {
+                this.handleExerciseInput(exercise);
+            });
+            
+            // Initial update
+            this.handleExerciseInput(exercise);
+        }
+    }
+
+    /**
+     * Render HTML content safely
+     */
+    renderHTMLContent(htmlContent, targetElement) {
+        // Create a temporary container to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        
+        // Find the table and clone it
+        const table = tempDiv.querySelector('table');
+        if (table) {
+            targetElement.innerHTML = '';
+            targetElement.appendChild(table.cloneNode(true));
+        } else {
+            targetElement.innerHTML = htmlContent;
+        }
+    }
+
+    /**
+     * Render CSS example (HTML with CSS applied)
+     */
+    renderCSSExample(htmlContent, cssContent, targetElement) {
+        // Create a unique ID for this example to avoid CSS conflicts
+        const exampleId = `example-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Create a container for the HTML
+        const container = document.createElement('div');
+        container.id = exampleId;
+        container.innerHTML = htmlContent;
+        
+        // Create scoped CSS by prefixing all selectors with the example ID
+        const scopedCSS = this.scopeCSS(cssContent, `#${exampleId}`);
+        
+        // Create a style element with the scoped CSS
+        const style = document.createElement('style');
+        style.textContent = scopedCSS;
+        
+        // Clear target and add style + content
+        targetElement.innerHTML = '';
+        targetElement.appendChild(style);
+        targetElement.appendChild(container);
+    }
+
+    /**
+     * Render CSS preview (HTML with user CSS applied)
+     */
+    renderCSSPreview(htmlContent, cssContent, targetElement) {
+        // Create a unique ID for this preview to avoid CSS conflicts
+        const previewId = `preview-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Create a container for the HTML
+        const container = document.createElement('div');
+        container.id = previewId;
+        container.innerHTML = htmlContent;
+        
+        // Create scoped CSS by prefixing all selectors with the preview ID
+        const scopedCSS = this.scopeCSS(cssContent, `#${previewId}`);
+        
+        // Create a style element with the scoped CSS
+        const style = document.createElement('style');
+        style.textContent = scopedCSS;
+        
+        // Clear target and add style + content
+        targetElement.innerHTML = '';
+        targetElement.appendChild(style);
+        targetElement.appendChild(container);
+    }
+
+    /**
+     * Scope CSS to a specific selector to avoid conflicts
+     */
+    scopeCSS(css, scopeSelector) {
+        // Simple CSS scoping - prefix all selectors with the scope
+        return css.replace(/([^{}]+){/g, (match, selector) => {
+            const trimmedSelector = selector.trim();
+            if (trimmedSelector.startsWith('@')) {
+                // Don't scope at-rules like @media
+                return match;
+            }
+            return `${scopeSelector} ${trimmedSelector} {`;
+        });
+    }
+
+    /**
+     * Handle input for a specific exercise
+     */
+    handleExerciseInput(exercise) {
+        const textarea = document.getElementById(`htmlInput${exercise.id}`);
+        const previewDiv = document.getElementById(`htmlPreview${exercise.id}`);
+        const feedbackDiv = document.getElementById(`feedback${exercise.id}`);
+        
+        if (!textarea || !previewDiv || !feedbackDiv) return;
+
+        const input = textarea.value;
+        
+        // Update preview based on exercise type
+        if (exercise.type === 'html') {
+            this.renderHTMLContent(input, previewDiv);
+        } else if (exercise.type === 'css') {
+            // For CSS: show HTML with user's CSS applied
+            this.renderCSSPreview(exercise.html, input, previewDiv);
+        } else {
+            previewDiv.innerHTML = input;
+        }
+        
+        // Check if exercise has custom input processor
+        let processedResult;
+        if (this.exerciseConfig.customInputProcessor) {
+            processedResult = this.exerciseConfig.customInputProcessor(input);
+        } else {
+            // Default input processing
+            processedResult = this.defaultInputProcessor(input, exercise);
+        }
+        
+        // Check if exercise has custom validator
+        let validationResult;
+        if (this.exerciseConfig.customValidator) {
+            validationResult = this.exerciseConfig.customValidator(processedResult, exercise);
+        } else {
+            // Default validation
+            validationResult = this.defaultValidator(processedResult, exercise);
+        }
+        
+        // Update feedback and scoring
+        this.updateExerciseFeedback(exercise, validationResult);
+    }
+
+    /**
+     * Default input processor
+     */
+    defaultInputProcessor(input, exercise) {
+        const cleaned = input.trim();
+        
+        // Handle different exercise types
+        if (exercise.type === 'html') {
+            return this.processHTMLInput(cleaned);
+        } else if (exercise.type === 'css') {
+            return this.processCSSInput(cleaned);
+        }
+        
+        // Default processing
+        return { valid: true, content: cleaned };
+    }
+
+    /**
+     * Process HTML input
+     */
+    processHTMLInput(input) {
+        // Basic HTML validation
+        if (!input.includes('<table>') || !input.includes('</table>')) {
+            return { valid: false, error: 'HTML moet een tabel bevatten' };
+        }
+
+        return { valid: true, content: input };
+    }
+
+    /**
+     * Process CSS input
+     */
+    processCSSInput(input) {
+        // Basic CSS validation
+        if (!input.trim()) {
+            return { valid: false, error: 'CSS mag niet leeg zijn' };
+        }
+
+        // Check for basic CSS syntax (contains selectors and properties)
+        if (!input.includes('{') || !input.includes('}')) {
+            return { valid: false, error: 'CSS moet geldige selectors en properties bevatten' };
+        }
+
+        return { valid: true, content: input };
+    }
+
+    /**
+     * Default validator
+     */
+    defaultValidator(processedResult, exercise) {
+        if (!processedResult || !processedResult.valid) {
+            return { isCorrect: false };
+        }
+
+        // Normalize both inputs (remove all whitespace)
+        const normalizedInput = processedResult.content.replace(/\s/g, '');
+        const normalizedSolution = exercise.solution.replace(/\s/g, '');
+
+        if (normalizedInput === normalizedSolution) {
+            return { isCorrect: true, score: 1 };
+        }
+
+        // Check if correct when ignoring case
+        const normalizedInputLower = normalizedInput.toLowerCase();
+        const normalizedSolutionLower = normalizedSolution.toLowerCase();
+        if (normalizedInputLower === normalizedSolutionLower) {
+            return { isCorrect: true, score: 1, message: 'Correct! Let op hoofd- en kleine letters.' };
+        }
+
+        return { isCorrect: false };
+    }
+
+    /**
+     * Update exercise feedback and scoring
+     */
+    updateExerciseFeedback(exercise, validationResult) {
+        const feedbackDiv = document.getElementById(`feedback${exercise.id}`);
+        if (!feedbackDiv) return;
+
+        if (validationResult.isCorrect) {
+            feedbackDiv.innerHTML = '<span class="party-check">&#10003;</span>';
+            if (validationResult.message) {
+                feedbackDiv.innerHTML += `<p style="color: #28a745; margin-top: 10px;">${validationResult.message}</p>`;
+            }
+            this.markExerciseCompleted(exercise);
+        } else {
+            feedbackDiv.innerHTML = '';
+            this.markExerciseIncomplete(exercise);
+        }
+    }
+
+    /**
+     * Mark exercise as completed and update tab score
+     */
+    markExerciseCompleted(exercise) {
+        if (!this.completedExercises.has(exercise.id)) {
+            this.completedExercises.add(exercise.id);
+            this.updateTabScore(exercise);
+        }
+    }
+
+    /**
+     * Mark exercise as incomplete and update tab score
+     */
+    markExerciseIncomplete(exercise) {
+        if (this.completedExercises.has(exercise.id)) {
+            this.completedExercises.delete(exercise.id);
+            this.updateTabScore(exercise);
+        }
+    }
+
+    /**
+     * Update tab score based on completed exercises
+     */
+    updateTabScore(exercise) {
+        // Find which tab this exercise belongs to
+        const tabGroups = {};
+        this.exerciseConfig.exercises.forEach(ex => {
+            if (!tabGroups[ex.tab]) {
+                tabGroups[ex.tab] = [];
+            }
+            tabGroups[ex.tab].push(ex);
+        });
+        
+        const tabNames = Object.keys(tabGroups);
+        let tabIndex = -1;
+        for (let i = 0; i < tabNames.length; i++) {
+            if (tabGroups[tabNames[i]].some(ex => ex.id === exercise.id)) {
+                tabIndex = i;
+                break;
+            }
+        }
+        
+        if (tabIndex >= 0 && exerciseTabManager) {
+            const exercisesInTab = tabGroups[tabNames[tabIndex]];
+            const completedInTab = exercisesInTab.filter(ex => this.completedExercises.has(ex.id)).length;
+            exerciseTabManager.updateTabScore(tabIndex, completedInTab);
+        }
+    }
+
+    /**
+     * Reset a specific exercise
+     */
+    resetExercise(exerciseId) {
+        const exercise = this.exerciseConfig.exercises.find(ex => ex.id === exerciseId);
+        if (!exercise) return;
+        
+        const textarea = document.getElementById(`htmlInput${exerciseId}`);
+        if (!textarea) return;
+        
+        textarea.value = exercise.initial || '';
+        this.markExerciseIncomplete(exercise);
+        this.handleExerciseInput(exercise);
     }
 
     /**
@@ -195,14 +594,30 @@ class ExerciseFramework {
     }
 
     /**
-     * Reset the current exercise
+     * Reset a specific exercise by ID
      */
-    resetExercise() {
-        if (!this.currentExercise) return;
+    resetExercise(exerciseId) {
+        // Find the exercise by ID
+        const exercise = this.exerciseConfig.exercises.find(ex => ex.id === exerciseId);
+        if (!exercise) return;
 
-        this.inputElement.value = this.currentExercise.initial || '';
-        this.updatePreview();
-        this.clearFeedback();
+        // Reset the textarea
+        const textarea = document.getElementById(`htmlInput${exerciseId}`);
+        if (textarea) {
+            textarea.value = exercise.initial || '';
+        }
+
+        // Clear feedback
+        const feedbackDiv = document.getElementById(`feedback${exerciseId}`);
+        if (feedbackDiv) {
+            feedbackDiv.innerHTML = '';
+        }
+
+        // Mark exercise as incomplete
+        this.markExerciseIncomplete(exercise);
+
+        // Trigger input handling to update preview
+        this.handleExerciseInput(exercise);
     }
 
     /**
