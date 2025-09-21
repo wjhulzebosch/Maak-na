@@ -29,7 +29,7 @@
             <div style="background-color: red; padding: 10px;">box2</div>
             <div style="background-color: red; padding: 10px;">box3</div>
         </div>
-        <p>Hierboven zie je de drie afbeeldingen met een padding van 10px.</p>
+        <p>Hierboven zie je de drie boxjes met een padding van 10px.</p>
     </div>
     <div class="theory-section">
         <h3>Margin</h3>
@@ -41,7 +41,7 @@
             <div style="background-color: red; margin: 10px;">box2</div>
             <div style="background-color: red; margin: 10px;">box3</div>
         </div>
-        <p>Hierboven zie je de drie afbeeldingen met een margin van 10px.</p>
+        <p>Hierboven zie je de drie boxjes met een margin van 10px.</p>
         <p>Zoals je kunt zien, loopt de rode achtergrond in het eerste voorbeeld door: de padding krijgt namelijk dezelde kleur als de achtergrond van het parent-element.</p>
         <p>In het tweede voorbeeld loopt de rode achtergrond niet door, maar zie je de grijze achtergrond van het parent-element: de margin heeft dezelfde kleur als het parent-element.</p>
     </div>
@@ -54,5 +54,11 @@
             <div style="padding: 10px; margin: 10px; background-color: red; border: 10px solid #ee0;">border: 10px solid #ee0;</div>
             <div style="padding: 10px; margin: 10px; background-color: red; border: 5px dotted purple;">border: 5px dotted purple;</div>
         </div>
+    </div>
+    <div class="theory-section">
+        <h3>Grootte van het box model</h3>
+        <p>De totale hoogte van het element is de  hoogte van de content plus de de padding boven en onder, de border boven en onder en de margin boven en onder.</p>
+        <p>De totale breedte van het element is de breedte van de content plus de de padding links en rechts, de border links en rechts en de margin links en rechts.</p>
+        <p>Een afbeelding van 100px breed, met een padding van 3px, een border van 5px en een margin van 10px heeft een totale breedte van 100px + 3px + 5px + 10px + 3px + 5px + 10px = 136px.</p>       
     </div>
 </div>

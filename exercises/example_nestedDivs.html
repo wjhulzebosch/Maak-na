@@ -1,0 +1,90 @@
+<div class="theory-container">
+    <h1>Nested Divs</h1>
+    <div class="theory-section">
+        <h2>Intro</h2>
+        <p>Nested divs zijn HTML-elementen die binnen andere div-elementen staan. Dit is een fundamenteel concept in HTML en CSS dat je helpt om complexe layouts te maken.</p>
+        
+        <h3>Wat zijn nested divs?</h3>
+        <p>Een nested div is een <code>&lt;div&gt;</code> element dat zich bevindt binnen een ander <code>&lt;div&gt;</code> element. Dit creëert een hiërarchische structuur waarbij de binnenste div een "child" is van de buitenste div (de "parent").</p>
+        
+        <div style="width: 500px; background-color: #f0f0f0; border: 1px solid black; margin: 10px; padding: 10px;">
+            <div style="background-color: #e0e0e0; padding: 10px; margin: 5px; border: 1px solid #ccc;">
+                Parent div
+                <div style="background-color: #d0d0d0; padding: 5px; margin: 5px; border: 1px solid #999;">
+                    Child div (nested)
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="theory-section">
+        <h2>HTML Structuur</h2>
+        <p>De basis structuur van nested divs ziet er zo uit:</p>
+        
+        <pre style="background-color: #f5f5f5; padding: 10px; border: 1px solid #ccc; margin: 10px;">
+&lt;div class="container"&gt;
+    &lt;div class="section"&gt;
+        &lt;div class="item"&gt;Item 1&lt;/div&gt;
+        &lt;div class="item"&gt;Item 2&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="section"&gt;
+        &lt;div class="item"&gt;Item 3&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</pre>
+        
+        <p>In dit voorbeeld:</p>
+        <ul>
+            <li><code>container</code> is de parent div</li>
+            <li><code>section</code> divs zijn children van container</li>
+            <li><code>item</code> divs zijn children van section (en grandchildren van container)</li>
+        </ul>
+    </div>
+    
+    <div class="theory-section">
+        <h2>CSS Styling</h2>
+        <p>Met CSS kun je nested divs op verschillende manieren stylen:</p>
+        
+        <h3>Display Properties</h3>
+        <ul>
+            <li><strong>block</strong>: Elementen worden onder elkaar geplaatst</li>
+            <li><strong>flex</strong>: Elementen worden naast elkaar geplaatst (met flexbox)</li>
+            <li><strong>inline-block</strong>: Elementen worden naast elkaar geplaatst maar behouden hun blok-eigenschappen</li>
+        </ul>
+        
+        <div style="width: 500px; background-color: #f0f0f0; border: 1px solid black; margin: 10px; padding: 10px;">
+            <h4>Display: block (standaard)</h4>
+            <div style="display: block; gap: 8px;">
+                <div style="padding: 8px; border: 1px solid #ccc; margin: 4px; background-color: #e0e0e0;">
+                    <div style="background: #f0f0f0; margin: 4px 0; padding: 4px;">Item 1</div>
+                    <div style="background: #f0f0f0; margin: 4px 0; padding: 4px;">Item 2</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="theory-section">
+        <h2>Praktische Tips</h2>
+        <p>Bij het werken met nested divs is het belangrijk om:</p>
+        <ul>
+            <li><strong>Logische structuur</strong> te behouden - elke div moet een duidelijke functie hebben</li>
+            <li><strong>Semantische class namen</strong> te gebruiken (container, section, item)</li>
+            <li><strong>Niet te diep te nesten</strong> - te veel niveaus maken code moeilijk te onderhouden</li>
+            <li><strong>CSS selectors</strong> correct te gebruiken om specifieke nested elementen te targeten</li>
+        </ul>
+        
+        <div style="width: 500px; background-color: #f0f0f0; border: 1px solid black; margin: 10px; padding: 10px;">
+            <h4>Goede structuur:</h4>
+            <div style="display: block; gap: 8px;">
+                <div style="padding: 8px; border: 1px solid #ccc; margin: 4px; background-color: #e0e0e0;">
+                    <div style="background: #f0f0f0; margin: 4px 0; padding: 4px;">A1</div>
+                    <div style="background: #f0f0f0; margin: 4px 0; padding: 4px;">A2</div>
+                </div>
+                <div style="padding: 8px; border: 1px solid #ccc; margin: 4px; background-color: #e0e0e0;">
+                    <div style="background: #f0f0f0; margin: 4px 0; padding: 4px;">B1</div>
+                    <div style="background: #f0f0f0; margin: 4px 0; padding: 4px;">B2</div>
+                </div>
+                <div style="padding: 8px; border: 1px solid #ccc; margin: 4px; background-color: #e0e0e0;">C</div>
+            </div>
+        </div>
+    </div>
+</div>
