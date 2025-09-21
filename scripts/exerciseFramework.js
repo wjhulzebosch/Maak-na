@@ -81,6 +81,19 @@ class ExerciseFramework {
      */
     createExerciseHTML(exercise, tabIndex, exerciseIndex) {
         const questionNumber = `${tabIndex + 1}.${exerciseIndex + 1}`;
+        
+        // Check if this exercise uses separate input fields
+        if (exercise.inputType === 'fields') {
+            return this.createFieldsHTML(exercise, questionNumber);
+        } else {
+            return this.createTextareaHTML(exercise, questionNumber);
+        }
+    }
+
+    /**
+     * Create HTML for textarea-based exercises
+     */
+    createTextareaHTML(exercise, questionNumber) {
         return `
             <div class="question-container">
                 <div><h3>Vraag ${questionNumber}</h3></div>
@@ -88,6 +101,48 @@ class ExerciseFramework {
                     <div class="input-area">
                         <h3>Jouw Code</h3>
                         <textarea id="htmlInput${exercise.id}" class="code-input" placeholder="${exercise.placeholder || 'Schrijf hier je code...'}"></textarea>
+                        <button class="reset-button" onclick="exerciseFramework.resetExercise(${exercise.id})">Reset</button>
+                    </div>
+                    <div class="preview-area">
+                        <h3>Preview</h3>
+                        <div class="preview-content" id="htmlPreview${exercise.id}"></div>
+                    </div>
+                    <div class="example-area">
+                        <h3>Voorbeeld</h3>
+                        <div class="example-content" id="htmlExample${exercise.id}"></div>
+                    </div>
+                    <div class="feedback-area">
+                        <h3>Feedback</h3>
+                        <div class="feedback-content" id="feedback${exercise.id}"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Create HTML for separate input fields (CSS box model)
+     */
+    createFieldsHTML(exercise, questionNumber) {
+        const fields = exercise.fields || ['width', 'height', 'margin', 'padding', 'border'];
+        const fieldLabels = exercise.fieldLabels || {};
+
+        const fieldsHTML = fields.map(field => `
+            <label data-label="${fieldLabels[field] || field + ':'}">
+                <input type="text" id="${field}${exercise.id}" class="field-input" placeholder="bijv. 100px">
+            </label>
+        `).join('');
+
+        return `
+            <div class="question-container">
+                <div><h3>Vraag ${questionNumber}</h3></div>
+                <div class="question-area">
+                    <div class="input-area">
+                        <h3>Jouw CSS Eigenschappen</h3>
+                        <div class="fields-container">
+                            ${fieldsHTML}
+                        </div>
+                        <input type="hidden" id="htmlInput${exercise.id}">
                         <button class="reset-button" onclick="exerciseFramework.resetExercise(${exercise.id})">Reset</button>
                     </div>
                     <div class="preview-area">
@@ -126,7 +181,18 @@ class ExerciseFramework {
             }
         }
         
-        // Set initial input
+        // Initialize input based on input type
+        if (exercise.inputType === 'fields') {
+            this.initializeFieldsInput(exercise);
+        } else {
+            this.initializeTextareaInput(exercise);
+        }
+    }
+
+    /**
+     * Initialize textarea input
+     */
+    initializeTextareaInput(exercise) {
         const textarea = document.getElementById(`htmlInput${exercise.id}`);
         if (textarea) {
             textarea.value = exercise.initial || '';
@@ -139,6 +205,52 @@ class ExerciseFramework {
             // Initial update
             this.handleExerciseInput(exercise);
         }
+    }
+
+    /**
+     * Initialize separate input fields
+     */
+    initializeFieldsInput(exercise) {
+        const fields = exercise.fields || ['width', 'height', 'margin', 'padding', 'border'];
+        const hiddenInput = document.getElementById(`htmlInput${exercise.id}`);
+        
+        // Set initial values from exercise.initial
+        if (exercise.initial && typeof exercise.initial === 'object') {
+            fields.forEach(field => {
+                const fieldElement = document.getElementById(`${field}${exercise.id}`);
+                if (fieldElement && exercise.initial[field]) {
+                    fieldElement.value = exercise.initial[field];
+                }
+            });
+        }
+        
+        // Function to update hidden input with combined CSS
+        const updateHiddenInput = () => {
+            let css = '';
+            fields.forEach(field => {
+                const fieldElement = document.getElementById(`${field}${exercise.id}`);
+                if (fieldElement && fieldElement.value.trim()) {
+                    css += `${field}: ${fieldElement.value.trim()}; `;
+                }
+            });
+            if (hiddenInput) {
+                // Wrap in a selector for proper CSS rendering
+                const wrappedCSS = css.trim() ? `.test-box { ${css.trim()} }` : '';
+                hiddenInput.value = wrappedCSS;
+            }
+            this.handleExerciseInput(exercise);
+        };
+        
+        // Add event listeners to all fields
+        fields.forEach(field => {
+            const fieldElement = document.getElementById(`${field}${exercise.id}`);
+            if (fieldElement) {
+                fieldElement.addEventListener('input', updateHiddenInput);
+            }
+        });
+        
+        // Initial update
+        updateHiddenInput();
     }
 
     /**
@@ -415,10 +527,27 @@ class ExerciseFramework {
         const exercise = this.exerciseConfig.exercises.find(ex => ex.id === exerciseId);
         if (!exercise) return;
         
-        const textarea = document.getElementById(`htmlInput${exerciseId}`);
-        if (!textarea) return;
+        if (exercise.inputType === 'fields') {
+            // Reset individual fields
+            const fields = exercise.fields || ['width', 'height', 'margin', 'padding', 'border'];
+            fields.forEach(field => {
+                const fieldElement = document.getElementById(`${field}${exerciseId}`);
+                if (fieldElement) {
+                    if (exercise.initial && typeof exercise.initial === 'object') {
+                        fieldElement.value = exercise.initial[field] || '';
+                    } else {
+                        fieldElement.value = '';
+                    }
+                }
+            });
+        } else {
+            // Reset textarea
+            const textarea = document.getElementById(`htmlInput${exerciseId}`);
+            if (textarea) {
+                textarea.value = exercise.initial || '';
+            }
+        }
         
-        textarea.value = exercise.initial || '';
         this.markExerciseIncomplete(exercise);
         this.handleExerciseInput(exercise);
     }

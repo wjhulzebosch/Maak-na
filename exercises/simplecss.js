@@ -41,6 +41,24 @@ const simplecssConfig = {
             initial: '.header {\n  background-color: ___;\n}\n\n.content {\n  background-color: ___;\n}\n\n.sidebar {\n  background-color: ___;\n}\n\n.footer {\n  background-color: ___;\n}',
             solution: '.header {\n  background-color: #333;\n}\n\n.content {\n  background-color: #f0f0f0;\n}\n\n.sidebar {\n  background-color: #e0e0e0;\n}\n\n.footer {\n  background-color: #666;\n}',
             placeholder: 'Vul de ontbrekende kleuren in (gebruik hex codes voor de laatste)...'
+        },
+        {
+            id: 4,
+            type: "css",
+            inputType: "fields",
+            tab: "basis",
+            title: "Box Model Test",
+            description: "Test de nieuwe separate input fields voor box model",
+            fields: ['width', 'height', 'background-color'],
+            fieldLabels: {
+                width: 'Breedte:',
+                height: 'Hoogte:',
+                'background-color': 'Achtergrond:'
+            },
+            initial: { width: '', height: '', 'background-color': '' },
+            solution: '.test-box { width: 200px; height: 100px; background-color: purple; }',
+            html: '<div class="test-box">Test Box</div>',
+            maxScore: 3
         }
     ]
 };
