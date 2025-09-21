@@ -44,13 +44,15 @@ class ExerciseTabManager {
      * Create a specified number of tabs
      * @param {number} numberOfTabs - Number of tabs to create
      * @param {Array} tabNames - Optional array of custom tab names
-     * @param {Array} maxScores - Optional array of max scores per tab
+     * @param {Array} exerciseCounts - Optional array of exercise counts per tab
      */
-    createTabs(numberOfTabs, tabNames = null, maxScores = null) {
+    createTabs(numberOfTabs, tabNames = null, exerciseCounts = null) {
         if (numberOfTabs < 1) {
             console.error('Number of tabs must be at least 1');
             return;
         }
+
+        console.log('createTabs called with:', { numberOfTabs, tabNames, exerciseCounts });
 
         this.clearExistingTabs();
         this.maxScore = 0;
@@ -58,12 +60,12 @@ class ExerciseTabManager {
         for (let i = 0; i < numberOfTabs; i++) {
             const tabNumber = i + 1;
             const tabName = tabNames && tabNames[i] ? tabNames[i] : `Oefening ${tabNumber}`;
-            const tabMaxScore = maxScores && maxScores[i] ? maxScores[i] : 0;
+            const exerciseCount = exerciseCounts && exerciseCounts[i] ? exerciseCounts[i] : 0;
             
-            this.maxScore += tabMaxScore;
+            this.maxScore += exerciseCount;
 
             // Create tab button
-            const tabButton = this.createTabButton(tabNumber, tabName);
+            const tabButton = this.createTabButton(tabNumber, tabName, exerciseCount);
             this.tabButtons.appendChild(tabButton);
 
             // Create tab panel
@@ -74,7 +76,7 @@ class ExerciseTabManager {
             this.tabs.push({
                 number: tabNumber,
                 name: tabName,
-                maxScore: tabMaxScore,
+                maxScore: exerciseCount,
                 currentScore: 0,
                 completed: false,
                 button: tabButton,
@@ -91,9 +93,10 @@ class ExerciseTabManager {
      * Create a tab button element
      * @param {number} tabNumber - Tab number
      * @param {string} tabName - Tab name
+     * @param {number} exerciseCount - Number of exercises in this tab
      * @returns {HTMLElement} Tab button element
      */
-    createTabButton(tabNumber, tabName) {
+    createTabButton(tabNumber, tabName, exerciseCount = 1) {
         const button = document.createElement('button');
         button.className = 'tab-button';
         button.id = `tab${tabNumber}`;
@@ -106,7 +109,7 @@ class ExerciseTabManager {
         
         const scoreSpan = document.createElement('span');
         scoreSpan.className = 'tab-score';
-        scoreSpan.textContent = `(0/${this.tabs[tabNumber - 1]?.maxScore || 0})`;
+        scoreSpan.textContent = `(0/${exerciseCount})`;
         
         button.appendChild(buttonContent);
         button.appendChild(scoreSpan);
@@ -343,10 +346,48 @@ function loadExampleTabs() {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // exerciseTabManager = new ExerciseTabManager();
+    exerciseTabManager = new ExerciseTabManager();
     
-    // Load example tabs - comment out this line to disable the example
-    // loadExampleTabs();
+    // Get exercise type from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const exerciseType = urlParams.get('exercise');
+    
+    if (!exerciseType) {
+        // Show "Oefening niet gevonden" message
+        exerciseTabManager.createTabs(1, ['Oefening niet gevonden'], [0]);
+        exerciseTabManager.setTabContent(0, `
+            <div class="excercise-explanation">
+                <h2>Oefening niet gevonden</h2>
+                <p>Geen oefening opgegeven. Gebruik een geldige URL parameter:</p>
+                <ul>
+                    <li><code>?exercise=tabellen</code> - HTML Tabellen oefeningen</li>
+                    <li><code>?exercise=boxjes</code> - CSS Box Model oefeningen</li>
+                </ul>
+            </div>
+        `);
+        return;
+    }
+    
+    // Load the correct exercise file dynamically
+    const script = document.createElement('script');
+    script.src = `exercises/${exerciseType}.js`;
+    script.onload = function() {
+        // The exercise file will handle its own initialization
+        if (window[exerciseType + 'Config'] && window[exerciseType + 'Config'].init) {
+            window[exerciseType + 'Config'].init();
+        }
+    };
+    script.onerror = function() {
+        // Show error if exercise file not found
+        exerciseTabManager.createTabs(1, ['Oefening niet gevonden'], [0]);
+        exerciseTabManager.setTabContent(0, `
+            <div class="excercise-explanation">
+                <h2>Oefening niet gevonden</h2>
+                <p>De opgevraagde oefening "${exerciseType}" bestaat niet.</p>
+            </div>
+        `);
+    };
+    document.head.appendChild(script);
 });
 
 // Export for use in other scripts
