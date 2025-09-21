@@ -24,9 +24,9 @@ class ExerciseFramework {
         // Update main title with exercise title
         const mainTitle = document.getElementById('mainTitle');
         if (mainTitle && config.title) {
-            const scoreSpan = mainTitle.querySelector('#totalScore');
-            const scoreText = scoreSpan ? scoreSpan.outerHTML : '';
-            mainTitle.innerHTML = config.title + ' ' + scoreText;
+            // Calculate total number of exercises
+            const totalExercises = config.exercises ? config.exercises.length : 0;
+            mainTitle.innerHTML = config.title + ' <span id="totalScore">(0/' + totalExercises + ')</span>';
         }
         
         this.initializeAllExercises();
@@ -594,6 +594,22 @@ class ExerciseFramework {
             const exercisesInTab = tabGroups[tabNames[tabIndex]];
             const completedInTab = exercisesInTab.filter(ex => this.completedExercises.has(ex.id)).length;
             exerciseTabManager.updateTabScore(tabIndex, completedInTab);
+        }
+        
+        // Update main title score
+        this.updateMainTitleScore();
+    }
+    
+    /**
+     * Update the main title score display
+     */
+    updateMainTitleScore() {
+        const mainTitle = document.getElementById('mainTitle');
+        const scoreElement = document.getElementById('totalScore');
+        if (mainTitle && scoreElement && this.exerciseConfig) {
+            const totalExercises = this.exerciseConfig.exercises ? this.exerciseConfig.exercises.length : 0;
+            const completedExercises = this.completedExercises.size;
+            scoreElement.textContent = `(${completedExercises}/${totalExercises})`;
         }
     }
 
