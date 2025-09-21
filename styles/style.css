@@ -1,0 +1,15 @@
+:root {
+  --color-table-border: #333;
+  --color-table-bg: #f9f9f9;
+  --color-th-bg: #e0e0e0;
+  --color-td-bg: #ffffff;
+  --color-success: #39e600;
+}
+
+body {
+  font-family: sans-serif;
+  gap: 2rem;
+  padding: 2rem;
+  align-items: flex-start;
+  background-color: #f5f5f5;
+}
