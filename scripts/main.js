@@ -52,7 +52,6 @@ class ExerciseTabManager {
             return;
         }
 
-        console.log('createTabs called with:', { numberOfTabs, tabNames, exerciseCounts });
 
         this.clearExistingTabs();
         this.maxScore = 0;
@@ -105,7 +104,7 @@ class ExerciseTabManager {
         // Create the button content with score display
         const buttonContent = document.createElement('span');
         buttonContent.className = 'tab-button-content';
-        buttonContent.textContent = tabName;
+        buttonContent.innerHTML = tabName;
         
         const scoreSpan = document.createElement('span');
         scoreSpan.className = 'tab-score';

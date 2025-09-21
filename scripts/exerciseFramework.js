@@ -38,34 +38,39 @@ class ExerciseFramework {
             tabGroups[exercise.tab].push(exercise);
         });
 
-        // Create tabs based on tab groups
-        const tabKeys = Object.keys(tabGroups);
-        const tabNames = tabKeys.map(tabKey => this.exerciseConfig.tabs[tabKey].name);
-        const exerciseCounts = Object.values(tabGroups).map(group => group.length);
+        // Always add "Uitleg" tab as last tab
+        const tabKeys = [...Object.keys(tabGroups), 'uitleg'];
+        const tabNames = [...Object.keys(tabGroups).map(tabKey => this.exerciseConfig.tabs[tabKey].name), '<span style="color: green;">?</span> Uitleg'];
+        const exerciseCounts = [...Object.values(tabGroups).map(group => group.length), 0];
         
         exerciseTabManager.createTabs(tabNames.length, tabNames, exerciseCounts);
 
         // Create content for each tab
         tabKeys.forEach((tabKey, tabIndex) => {
-            const exercisesInTab = tabGroups[tabKey];
-            const tabInfo = this.exerciseConfig.tabs[tabKey];
-            
-            // Create HTML for all exercises in this tab
-            const exercisesHTML = exercisesInTab.map((exercise, exerciseIndex) => 
-                this.createExerciseHTML(exercise, tabIndex, exerciseIndex)
-            ).join('');
-            
-            const content = `
-                <div class="excercise-explanation">
-                    <h2>${this.exerciseConfig.title || 'Oefeningen'} - ${tabInfo.name}</h2>
-                    <p>${tabInfo.instructions}</p>
-                </div>
-                <div class="tab-panel active">
-                    ${exercisesHTML}
-                </div>
-            `;
-            
-            exerciseTabManager.setTabContent(tabIndex, content);
+            if (tabKey === 'uitleg') {
+                // Load HTML content for Uitleg tab
+                this.loadUitlegTabContent(tabIndex);
+            } else {
+                const exercisesInTab = tabGroups[tabKey];
+                const tabInfo = this.exerciseConfig.tabs[tabKey];
+                
+                // Create HTML for all exercises in this tab
+                const exercisesHTML = exercisesInTab.map((exercise, exerciseIndex) => 
+                    this.createExerciseHTML(exercise, tabIndex, exerciseIndex)
+                ).join('');
+                
+                const content = `
+                    <div class="excercise-explanation">
+                        <h2>${this.exerciseConfig.title || 'Oefeningen'} - ${tabInfo.name}</h2>
+                        <p>${tabInfo.instructions}</p>
+                    </div>
+                    <div class="tab-panel active">
+                        ${exercisesHTML}
+                    </div>
+                `;
+                
+                exerciseTabManager.setTabContent(tabIndex, content);
+            }
         });
 
         // Initialize each exercise
@@ -163,6 +168,43 @@ class ExerciseFramework {
     }
 
     /**
+     * Load HTML content for Uitleg tab
+     */
+    loadUitlegTabContent(tabIndex) {
+        // Get exercise type from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const exerciseType = urlParams.get('exercise');
+        const htmlFileName = `exercises/${exerciseType}.html`;
+        
+        fetch(htmlFileName)
+            .then(response => response.text())
+            .then(html => {
+                const content = `
+                    <div class="excercise-explanation">
+                        <h2>${this.exerciseConfig.title || 'Oefeningen'} - Uitleg</h2>
+                    </div>
+                    <div class="tab-panel active">
+                        <div class="html-content">
+                            ${html}
+                        </div>
+                    </div>
+                `;
+                exerciseTabManager.setTabContent(tabIndex, content);
+            })
+            .catch(error => {
+                const content = `
+                    <div class="excercise-explanation">
+                        <h2>${this.exerciseConfig.title || 'Oefeningen'} - Uitleg</h2>
+                    </div>
+                    <div class="tab-panel active">
+                        <p>Geen uitleg beschikbaar</p>
+                    </div>
+                `;
+                exerciseTabManager.setTabContent(tabIndex, content);
+            });
+    }
+
+    /**
      * Initialize a single exercise
      */
     initializeSingleExercise(exercise) {
@@ -173,8 +215,17 @@ class ExerciseFramework {
                 // Render HTML solution
                 this.renderHTMLContent(exercise.solution, exampleDiv);
             } else if (exercise.type === 'css') {
-                // For CSS: show HTML with solution CSS applied
-                this.renderCSSExample(exercise.html, exercise.solution, exampleDiv);
+                // Check if exercise config has custom example updater
+                if (this.exerciseConfig.customExampleUpdater) {
+                    const handled = this.exerciseConfig.customExampleUpdater(exercise, exampleDiv, exercise.solution);
+                    if (!handled) {
+                        // Fall back to default CSS rendering
+                        this.renderCSSExample(exercise.html, exercise.solution, exampleDiv);
+                    }
+                } else {
+                    // Use default CSS rendering
+                    this.renderCSSExample(exercise.html, exercise.solution, exampleDiv);
+                }
             } else {
                 // Default: just set as text
                 exampleDiv.innerHTML = exercise.solution;
@@ -352,8 +403,17 @@ class ExerciseFramework {
         if (exercise.type === 'html') {
             this.renderHTMLContent(input, previewDiv);
         } else if (exercise.type === 'css') {
-            // For CSS: show HTML with user's CSS applied
-            this.renderCSSPreview(exercise.html, input, previewDiv);
+            // Check if exercise config has custom preview updater
+            if (this.exerciseConfig.customPreviewUpdater) {
+                const handled = this.exerciseConfig.customPreviewUpdater(exercise, previewDiv, input);
+                if (!handled) {
+                    // Fall back to default CSS rendering
+                    this.renderCSSPreview(exercise.html, input, previewDiv);
+                }
+            } else {
+                // Use default CSS rendering
+                this.renderCSSPreview(exercise.html, input, previewDiv);
+            }
         } else {
             previewDiv.innerHTML = input;
         }
@@ -401,9 +461,17 @@ class ExerciseFramework {
      * Process HTML input
      */
     processHTMLInput(input) {
-        // Basic HTML validation
-        if (!input.includes('<table>') || !input.includes('</table>')) {
-            return { valid: false, error: 'HTML moet een tabel bevatten' };
+        // Basic HTML validation - check for valid HTML structure
+        if (!input.includes('<') || !input.includes('>')) {
+            return { valid: false, error: 'HTML moet geldige tags bevatten' };
+        }
+
+        // Check for basic HTML structure (opening and closing tags)
+        const openTags = (input.match(/</g) || []).length;
+        const closeTags = (input.match(/>/g) || []).length;
+        
+        if (openTags === 0 || closeTags === 0) {
+            return { valid: false, error: 'HTML moet geldige opening en closing tags bevatten' };
         }
 
         return { valid: true, content: input };
@@ -523,33 +591,28 @@ class ExerciseFramework {
     /**
      * Reset a specific exercise
      */
-    resetExercise(exerciseId) {
-        const exercise = this.exerciseConfig.exercises.find(ex => ex.id === exerciseId);
-        if (!exercise) return;
-        
-        if (exercise.inputType === 'fields') {
-            // Reset individual fields
-            const fields = exercise.fields || ['width', 'height', 'margin', 'padding', 'border'];
-            fields.forEach(field => {
-                const fieldElement = document.getElementById(`${field}${exerciseId}`);
-                if (fieldElement) {
-                    if (exercise.initial && typeof exercise.initial === 'object') {
-                        fieldElement.value = exercise.initial[field] || '';
-                    } else {
-                        fieldElement.value = '';
-                    }
+    resetFieldsExercise(exerciseId, exercise) {
+        const fields = exercise.fields || ['width', 'height', 'margin', 'padding', 'border'];
+        fields.forEach(field => {
+            const fieldElement = document.getElementById(`${field}${exerciseId}`);
+            if (fieldElement) {
+                if (exercise.initial && typeof exercise.initial === 'object') {
+                    fieldElement.value = exercise.initial[field] || '';
+                } else {
+                    fieldElement.value = '';
                 }
-            });
-        } else {
-            // Reset textarea
-            const textarea = document.getElementById(`htmlInput${exerciseId}`);
-            if (textarea) {
-                textarea.value = exercise.initial || '';
+                // Trigger input event to update preview
+                fieldElement.dispatchEvent(new Event('input'));
+            } else {
             }
+        });
+    }
+
+    resetTextareaExercise(exerciseId, exercise) {
+        const textarea = document.getElementById(`htmlInput${exerciseId}`);
+        if (textarea) {
+            textarea.value = exercise.initial || '';
         }
-        
-        this.markExerciseIncomplete(exercise);
-        this.handleExerciseInput(exercise);
     }
 
     /**
@@ -726,14 +789,14 @@ class ExerciseFramework {
      * Reset a specific exercise by ID
      */
     resetExercise(exerciseId) {
-        // Find the exercise by ID
-        const exercise = this.exerciseConfig.exercises.find(ex => ex.id === exerciseId);
+        const exercise = this.exerciseConfig?.exercises?.find(ex => ex.id === exerciseId);
         if (!exercise) return;
 
-        // Reset the textarea
-        const textarea = document.getElementById(`htmlInput${exerciseId}`);
-        if (textarea) {
-            textarea.value = exercise.initial || '';
+        // Call appropriate reset function based on input type
+        if (exercise.inputType === 'fields') {
+            this.resetFieldsExercise(exerciseId, exercise);
+        } else {
+            this.resetTextareaExercise(exerciseId, exercise);
         }
 
         // Clear feedback

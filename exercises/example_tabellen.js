@@ -2,7 +2,7 @@
  * Tabellen Exercise - HTML Table exercises
  */
 
-const tabellenConfig = {
+const example_tabellenConfig = {
     title: 'HTML Tabellen',
     tabs: {
         "basis": {
@@ -43,7 +43,7 @@ const tabellenConfig = {
 };
 
 // Initialize function
-tabellenConfig.init = function() {
+example_tabellenConfig.init = function() {
     // Initialize the exercise framework with this configuration
     setTimeout(() => {
         exerciseFramework.initExercise(this);
@@ -51,4 +51,4 @@ tabellenConfig.init = function() {
 };
 
 // Export for use
-window.tabellenConfig = tabellenConfig;
+window.example_tabellenConfig = example_tabellenConfig;
