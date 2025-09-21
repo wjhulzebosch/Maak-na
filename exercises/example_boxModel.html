@@ -1,12 +1,58 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSS Box Model Uitleg</title>
-</head>
-<body>
+<div class="theory-container">
     <h1>CSS Box Model</h1>
-    <p>Het CSS box model is een van de belangrijkste concepten in CSS. Elk HTML element wordt behandeld als een rechthoekige box die bestaat uit vier lagen: content, padding, border en margin. De content is de daadwerkelijke inhoud van het element, padding is de ruimte tussen de content en de border, border is de lijn rondom het element, en margin is de ruimte buiten de border die het element scheidt van andere elementen.</p>
-</body>
-</html>
+    <div class="theory-section">
+        <h2>Intro</h2>
+        <p>Het CSS box model is een van de belangrijkste concepten in webontwikkeling. Elk HTML-element wordt weergegeven als een rechthoekige box die bestaat uit vier lagen: <strong>content</strong>, <strong>padding</strong>, <strong>border</strong> en <strong>margin</strong>.</p>
+        <p><img src="../assets/boxUitleg.png" alt="CSS Box Model"></p>
+
+        <h3>De lagen van het box model</h3>
+        <ul>
+            <li><strong>Content</strong>: dit is de daadwerkelijke inhoud van het element, zoals tekst, een afbeelding of een video.</li>
+            <li><strong>Padding</strong>: de ruimte tussen de content en de border. Padding neemt de achtergrondkleur van het element over.</li>
+            <li><strong>Border</strong>: de lijn rondom het element. Borders kunnen verschillende diktes, stijlen en kleuren hebben.</li>
+            <li><strong>Margin</strong>: de ruimte buiten de border die het element scheidt van andere elementen. Margins zijn transparant.</li>
+        </ul>
+        <p>Je kunt de eigenschappen van deze lagen aanpassen met de CSS-properties <code>padding</code>, <code>border</code> en <code>margin</code>.</p>
+    </div>
+    <div class="theory-section">
+        <h2>Breedte en hoogte</h2>
+        <p>Met <code>width</code> en <code>height</code> stel je de afmetingen van de <strong>content</strong> in. </p>
+        <p>Je kunt zowel de width als height instellen, of één van de twee. Afbeeldingen schalen zich automatisch aan de breedte of hoogte die je instelt. Hierdoor kun je bijvoorbeeld de afbeelding verkleinen tot 100px breed, en de hoogte wordt dan automatisch correct geschaald.</p>
+        <p>Als je wilt voorkomen dat een afbeelding verkeerd schaalt, geef je dus alleen de width of alleen de height op.</p>
+        <p>Wanneer je de width of height instelt, wordt een afbeelding vergroot of verkleint. Als je niet wilt dat kleine afbeeldingen uitvergroot worden, kun je ook een max-width of max-height instellen. De afbeelding wordt dan niet vergroot, enkel verkleint als hij groter dan de opgegeven max-width of max-height is.</p>
+    </div>
+    <div class="theory-section">
+        <h3>Padding</h3>
+        <p>Padding is de ruimte tussen de content en de border. De padding heeft dezelfde achtergrondkleur als de content. Hieronder zie je drie boxjes met een rode achtergrond.</p>
+        <div style="height: 100px; width: 500px;background-color: #f0f0f0; border: 1px solid black; margin: 10px; display: flex; flex-direction: row;">
+            <div style="background-color: red; padding: 10px;">box1</div>
+            <div style="background-color: red; padding: 10px;">box2</div>
+            <div style="background-color: red; padding: 10px;">box3</div>
+        </div>
+        <p>Hierboven zie je de drie afbeeldingen met een padding van 10px.</p>
+    </div>
+    <div class="theory-section">
+        <h3>Margin</h3>
+        <p>Margin is de ruimte buiten de border die het element scheidt van andere elementen. De margin heeft dezelfde achtergrondkleur als het het parent-element.</p>        
+        <p>Het verschil tussen margin en padding is dat margin de ruimte buiten de border is, terwijl padding de ruimte binnen de border is. Hieronder zie je opnieuw drie boxjes met een rode achtergrond.</p>
+
+        <div style="height: 100px; width: 500px; background-color: #f0f0f0; border: 1px solid black; margin: 10px; display: flex; flex-direction: row;">
+            <div style="background-color: red; margin: 10px;">box1</div>
+            <div style="background-color: red; margin: 10px;">box2</div>
+            <div style="background-color: red; margin: 10px;">box3</div>
+        </div>
+        <p>Hierboven zie je de drie afbeeldingen met een margin van 10px.</p>
+        <p>Zoals je kunt zien, loopt de rode achtergrond in het eerste voorbeeld door: de padding krijgt namelijk dezelde kleur als de achtergrond van het parent-element.</p>
+        <p>In het tweede voorbeeld loopt de rode achtergrond niet door, maar zie je de grijze achtergrond van het parent-element: de margin heeft dezelfde kleur als het parent-element.</p>
+    </div>
+    <div class="theory-section">
+        <h3>Border</h3>
+        <p>Border is de lijn rondom het element. De border heeft zijn eigen kleur, en kan verschillende diktes, stijlen en kleuren hebben.</p>
+        <p>Hieronder zie je een voorbeeld van de verschillende stijlen, met de code erin.</p>
+        <div style="width: 500px; background-color: #f0f0f0; border: 1px solid black; margin: 10px; display: flex; flex-direction: column;">
+            <div style="padding: 10px; margin: 10px; background-color: red; border: 1px solid black;">border: 1px solid black;</div>
+            <div style="padding: 10px; margin: 10px; background-color: red; border: 10px solid #ee0;">border: 10px solid #ee0;</div>
+            <div style="padding: 10px; margin: 10px; background-color: red; border: 5px dotted purple;">border: 5px dotted purple;</div>
+        </div>
+    </div>
+</div>

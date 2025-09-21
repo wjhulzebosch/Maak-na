@@ -81,3 +81,8 @@
   .tab-panel.active {
     display: block;
   }
+
+  .theory-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }

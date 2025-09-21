@@ -20,6 +20,15 @@ class ExerciseFramework {
      */
     initExercise(config) {
         this.exerciseConfig = config;
+        
+        // Update main title with exercise title
+        const mainTitle = document.getElementById('mainTitle');
+        if (mainTitle && config.title) {
+            const scoreSpan = mainTitle.querySelector('#totalScore');
+            const scoreText = scoreSpan ? scoreSpan.outerHTML : '';
+            mainTitle.innerHTML = config.title + ' ' + scoreText;
+        }
+        
         this.initializeAllExercises();
     }
 
@@ -61,7 +70,7 @@ class ExerciseFramework {
                 
                 const content = `
                     <div class="excercise-explanation">
-                        <h2>${this.exerciseConfig.title || 'Oefeningen'} - ${tabInfo.name}</h2>
+                        <h2>${tabInfo.name}</h2>
                         <p>${tabInfo.instructions}</p>
                     </div>
                     <div class="tab-panel active">
@@ -181,7 +190,7 @@ class ExerciseFramework {
             .then(html => {
                 const content = `
                     <div class="excercise-explanation">
-                        <h2>${this.exerciseConfig.title || 'Oefeningen'} - Uitleg</h2>
+                        <h2>Uitleg</h2>
                     </div>
                     <div class="tab-panel active">
                         <div class="html-content">
